@@ -1,0 +1,1150 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rebelarte — Caja Chica</title>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Firebase -->
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
+      import { getFirestore, collection, addDoc, getDocs, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+
+      const firebaseConfig = {
+        apiKey: "AIzaSyDvWEfD7D627hVOvc57t6VhBdmGXCdyPlw",
+        authDomain: "stayrebel.firebaseapp.com",
+        projectId: "stayrebel",
+        storageBucket: "stayrebel.firebasestorage.app",
+        messagingSenderId: "526896260996",
+        appId: "1:526896260996:web:8911c5d209d9a641a4dfd1",
+        measurementId: "G-0207TR98DE"
+      };
+
+      const app = initializeApp(firebaseConfig);
+      const db = getFirestore(app);
+      const txCol = collection(db, "transacciones");
+
+      // Exponer funciones al scope global
+      window._fbReady = true;
+
+      window.fbSave = async function(tx) {
+        await addDoc(txCol, tx);
+      };
+
+      window.fbLoad = async function() {
+        const snap = await getDocs(query(txCol, orderBy("fecha", "asc")));
+        return snap.docs.map(d => ({ ...d.data(), _docId: d.id }));
+      };
+
+      window.fbListen = function(callback) {
+        return onSnapshot(query(txCol, orderBy("fecha", "asc")), (snap) => {
+          const txs = snap.docs.map(d => ({ ...d.data(), _docId: d.id }));
+          callback(txs);
+        });
+      };
+
+      // Iniciar app cuando Firebase esté listo
+      window.addEventListener('DOMContentLoaded', () => {
+        if (window._appInit) window._appInit();
+      });
+    </script>
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            /* ── Colores corporativos Rebelarte ── */
+            --amarillo:  #F5C842;   /* dorado/amarillo del logo   */
+            --lila:      #9B7EC8;   /* lila/morado del logo       */
+            --turquesa:  #5EC4B6;   /* verde agua/turquesa        */
+
+            /* Paleta UI – fondo claro */
+            --bg:        #F7F5F2;   /* crema muy suave            */
+            --bg2:       #FFFFFF;   /* blanco puro (cards)        */
+            --bg3:       #F0EDE8;   /* gris cálido (inputs)       */
+            --ok:        var(--turquesa);
+            --err:       #E05A6A;   /* rojo suave                 */
+            --line:      rgba(0,0,0,0.08);
+            --t1:        #1E1A2E;   /* texto principal oscuro     */
+            --t2:        #7A7490;   /* texto secundario           */
+            --t3:        #B0AABB;   /* texto terciario/placeholder*/
+
+            /* Gradiente primario = los 3 colores del logo */
+            --grad: linear-gradient(135deg, var(--amarillo) 0%, var(--lila) 50%, var(--turquesa) 100%);
+            --grad-btn: linear-gradient(135deg, var(--lila) 0%, var(--turquesa) 100%);
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            color: var(--t1);
+            min-height: 100vh;
+            font-size: 14px;
+        }
+
+        /* ── SUBTLE TEXTURE ── */
+        body::before {
+            content: '';
+            position: fixed; inset: 0;
+            background-image:
+                radial-gradient(ellipse at 10% 10%, rgba(245,200,66,0.12) 0%, transparent 50%),
+                radial-gradient(ellipse at 90% 80%, rgba(94,196,182,0.12) 0%, transparent 50%),
+                radial-gradient(ellipse at 60% 20%, rgba(155,126,200,0.10) 0%, transparent 40%);
+            pointer-events: none; z-index: 0;
+        }
+
+        /* ── LAYOUT ── */
+        .wrap {
+            max-width: 860px;
+            margin: 0 auto;
+            padding: 1.5rem 1.25rem 4rem;
+            position: relative; z-index: 1;
+        }
+
+        /* ── HEADER ── */
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1.25rem 0 1.5rem;
+            border-bottom: 1px solid var(--line);
+            margin-bottom: 1.5rem;
+        }
+
+        .logo {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            background: var(--grad);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-transform: uppercase;
+        }
+
+        .header-badge {
+            font-size: 0.7rem;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--t2);
+            border: 1px solid var(--line);
+            padding: 0.3rem 0.7rem;
+            border-radius: 20px;
+            background: var(--bg2);
+        }
+
+        /* ── TABS ── */
+        .tabs {
+            display: flex;
+            gap: 0.4rem;
+            margin-bottom: 1.5rem;
+            background: var(--bg3);
+            padding: 0.3rem;
+            border-radius: 10px;
+            border: 1px solid var(--line);
+        }
+
+        .tab-btn {
+            flex: 1;
+            font-family: 'Syne', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            padding: 0.6rem 1rem;
+            border: none;
+            border-radius: 7px;
+            cursor: pointer;
+            background: transparent;
+            color: var(--t2);
+            transition: all 0.2s ease;
+        }
+
+        .tab-btn.active {
+            background: var(--grad-btn);
+            color: white;
+            box-shadow: 0 2px 8px rgba(155,126,200,0.3);
+        }
+
+        .tab-btn:hover:not(.active) {
+            color: var(--t1);
+            background: rgba(155,126,200,0.1);
+        }
+
+        /* ── SECTIONS ── */
+        .content-section { display: none; }
+        .content-section.active { display: block; animation: fadeUp 0.3s ease; }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ── CARDS ── */
+        .card {
+            background: var(--bg2);
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .card-icon {
+            width: 28px; height: 28px;
+            border-radius: 7px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.9rem;
+        }
+
+        .card-icon.ingreso { background: rgba(94,196,182,0.15); }
+        .card-icon.egreso  { background: rgba(224,90,106,0.12); }
+        .card-icon.info    { background: rgba(155,126,200,0.15); }
+
+        .card-title {
+            font-family: 'Syne', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            color: var(--t1);
+        }
+
+        /* ── FORMS ── */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+        }
+
+        label {
+            font-size: 0.7rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--t2);
+        }
+
+        input, select, textarea {
+            padding: 0.55rem 0.75rem;
+            background: var(--bg3);
+            border: 1.5px solid rgba(0,0,0,0.1);
+            border-radius: 7px;
+            color: var(--t1);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.875rem;
+            transition: all 0.2s ease;
+            width: 100%;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--lila);
+            box-shadow: 0 0 0 3px rgba(155,126,200,0.15);
+            background: #fff;
+        }
+
+        input::placeholder, textarea::placeholder { color: var(--t3); }
+
+        textarea {
+            resize: vertical;
+            min-height: 70px;
+            margin-bottom: 0.75rem;
+        }
+
+        .checkbox-row {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        input[type="checkbox"] {
+            width: 16px; height: 16px;
+            accent-color: var(--lila);
+        }
+
+        .checkbox-row label {
+            text-transform: none;
+            letter-spacing: 0;
+            font-size: 0.8rem;
+            color: var(--t2);
+            font-weight: 400;
+            margin: 0;
+        }
+
+        /* ── BUTTONS ── */
+        .btn {
+            font-family: 'Syne', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            padding: 0.65rem 1.5rem;
+            border: none;
+            border-radius: 7px;
+            cursor: pointer;
+            background: var(--grad-btn);
+            color: white;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px rgba(155,126,200,0.25);
+        }
+
+        .btn:hover { opacity: 0.88; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(155,126,200,0.3); }
+        .btn:active { transform: translateY(0); }
+        .btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+
+        .btn-sm {
+            padding: 0.4rem 0.9rem;
+            font-size: 0.7rem;
+        }
+
+        .btn-ghost {
+            background: var(--bg3);
+            border: 1px solid var(--line);
+            color: var(--t2);
+            box-shadow: none;
+        }
+
+        .btn-ghost:hover { color: var(--t1); background: rgba(155,126,200,0.1); }
+
+        /* ── TRANSACTIONS ── */
+        .tx-list { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.5rem; }
+
+        .tx-item {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            padding: 0.75rem;
+            background: var(--bg3);
+            border-radius: 8px;
+            border-left: 2px solid transparent;
+            transition: all 0.15s ease;
+            gap: 0.75rem;
+        }
+
+        .tx-item.ingreso { border-left-color: var(--turquesa); }
+        .tx-item.egreso  { border-left-color: var(--err); }
+
+        .tx-item:hover { background: rgba(155,126,200,0.07); }
+
+        .tx-info { flex: 1; min-width: 0; }
+        .tx-title { font-family: 'Syne', sans-serif; font-size: 0.85rem; font-weight: 700; margin-bottom: 0.15rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--t1); }
+        .tx-meta { font-size: 0.72rem; color: var(--t2); }
+        .tx-by { color: var(--lila); font-weight: 600; }
+
+        .tx-amount {
+            font-family: 'Syne', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        .tx-amount.ingreso { color: var(--turquesa); }
+        .tx-amount.egreso  { color: var(--err); }
+
+        .badge {
+            display: inline-block;
+            padding: 0.15rem 0.5rem;
+            background: rgba(245,200,66,0.2);
+            border-radius: 20px;
+            font-size: 0.65rem;
+            font-weight: 600;
+            color: #9A7A00;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            margin-left: 0.4rem;
+        }
+
+        /* ── ADMIN ── */
+        .login-box {
+            max-width: 360px;
+            margin: 2rem auto;
+        }
+
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .stat-card {
+            background: var(--bg2);
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            padding: 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+        }
+
+        .stat-card::after {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            height: 3px;
+        }
+
+        .stat-card.ing::after { background: var(--turquesa); }
+        .stat-card.egr::after { background: var(--err); }
+        .stat-card.bal::after { background: var(--grad-btn); }
+
+        .stat-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+
+        .stat-label {
+            font-size: 0.65rem;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: var(--t2);
+            margin-bottom: 0.4rem;
+        }
+
+        .stat-value {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 800;
+        }
+
+        .stat-value.ing { color: var(--turquesa); }
+        .stat-value.egr { color: var(--err); }
+        .stat-value.bal { color: var(--lila); }
+
+        /* ── FILTERS ── */
+        .filters-row {
+            display: flex;
+            gap: 0.6rem;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+
+        .filters-row select {
+            flex: 1;
+            min-width: 130px;
+        }
+
+        /* ── CHARTS ── */
+        .chart-wrap {
+            background: var(--bg2);
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+        }
+
+        .chart-title {
+            font-family: 'Syne', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--t2);
+            margin-bottom: 1rem;
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        @media (max-width: 600px) {
+            .charts-grid { grid-template-columns: 1fr; }
+            .stats-row { grid-template-columns: 1fr; }
+            header { flex-direction: column; gap: 0.5rem; text-align: center; }
+        }
+
+        /* ── MODAL ── */
+        .modal {
+            display: none;
+            position: fixed; inset: 0;
+            background: rgba(30,26,46,0.4);
+            backdrop-filter: blur(6px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .modal.active { display: flex; animation: fadeUp 0.2s ease; }
+
+        .modal-box {
+            background: var(--bg2);
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            padding: 1.5rem;
+            max-width: 520px;
+            width: 100%;
+            max-height: 85vh;
+            overflow-y: auto;
+            position: relative;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 1rem; right: 1rem;
+            width: 28px; height: 28px;
+            border-radius: 50%;
+            background: var(--bg3);
+            border: 1px solid var(--line);
+            color: var(--t2);
+            cursor: pointer;
+            font-size: 1rem;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .modal-close:hover { color: var(--t1); background: rgba(155,126,200,0.15); }
+
+        /* ── NOTIFICATION ── */
+        #notifEl {
+            position: fixed;
+            top: 1rem; right: 1rem;
+            padding: 0.6rem 1.2rem;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            z-index: 9999;
+            display: none;
+            animation: slideIn 0.3s ease;
+            max-width: 260px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        /* ── EMPTY STATE ── */
+        .empty {
+            text-align: center;
+            padding: 2rem;
+            color: var(--t3);
+        }
+
+        .empty span { font-size: 2rem; display: block; margin-bottom: 0.5rem; }
+
+        /* ── LOGOUT ── */
+        .logout-btn {
+            position: fixed;
+            bottom: 1.5rem; right: 1.5rem;
+            background: var(--bg2);
+            border: 1px solid var(--line);
+            color: var(--t2);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'Syne', sans-serif;
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            transition: all 0.2s;
+            z-index: 100;
+            display: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .logout-btn.visible { display: block; }
+        .logout-btn:hover { background: var(--err); border-color: var(--err); color: white; }
+
+        /* ── SCROLLBAR ── */
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(155,126,200,0.3); border-radius: 10px; }
+
+        select option { background: var(--bg2); color: var(--t1); }
+
+        /* ── ONLINE INDICATOR ── */
+        .online-dot {
+            display: inline-block;
+            width: 6px; height: 6px;
+            background: var(--turquesa);
+            border-radius: 50%;
+            margin-right: 4px;
+            animation: blink 2s ease infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+
+        <header>
+            <div class="logo">Rebelarte</div>
+            <div class="header-badge"><span class="online-dot"></span>Caja Chica</div>
+        </header>
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('movimientos', this)">Movimientos</button>
+            <button class="tab-btn" onclick="switchTab('admin', this)">Administrador</button>
+        </div>
+
+        <!-- ═══ MOVIMIENTOS ═══ -->
+        <div id="movimientos" class="content-section active">
+
+            <!-- Ingreso -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon ingreso">💚</div>
+                    <div class="card-title">Registrar Ingreso</div>
+                </div>
+                <form id="ingresoForm">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="ingresoNombre">Registrado por</label>
+                            <input type="text" id="ingresoNombre" required placeholder="Tu nombre">
+                        </div>
+                        <div class="form-group">
+                            <label for="ingresoMonto">Monto</label>
+                            <input type="number" id="ingresoMonto" step="0.01" required placeholder="0.00">
+                        </div>
+                        <div class="form-group">
+                            <label for="ingresoConcepto">Concepto</label>
+                            <input type="text" id="ingresoConcepto" required placeholder="Ej: Venta de productos">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn">+ Registrar Ingreso</button>
+                </form>
+            </div>
+
+            <!-- Egreso -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon egreso">🔴</div>
+                    <div class="card-title">Registrar Egreso</div>
+                </div>
+                <form id="egresoForm">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="egresoNombre">Registrado por</label>
+                            <input type="text" id="egresoNombre" required placeholder="Tu nombre">
+                        </div>
+                        <div class="form-group">
+                            <label for="egresoMonto">Monto</label>
+                            <input type="number" id="egresoMonto" step="0.01" required placeholder="0.00">
+                        </div>
+                        <div class="form-group">
+                            <label for="egresoTitulo">Título</label>
+                            <input type="text" id="egresoTitulo" required placeholder="Ej: Impresiones">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="egresoConcepto">Concepto detallado</label>
+                        <textarea id="egresoConcepto" required placeholder="Describe el motivo del gasto..."></textarea>
+                    </div>
+                    <div class="checkbox-row">
+                        <input type="checkbox" id="egresoFactura">
+                        <label for="egresoFactura">Este egreso generó factura</label>
+                    </div>
+                    <button type="submit" class="btn">− Registrar Egreso</button>
+                </form>
+            </div>
+
+            <!-- Últimos movimientos -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon info">📋</div>
+                    <div class="card-title">Últimos Movimientos</div>
+                </div>
+                <div id="ultimosMovimientos" class="tx-list"></div>
+            </div>
+
+        </div>
+
+        <!-- ═══ ADMIN ═══ -->
+        <div id="admin" class="content-section">
+
+            <!-- Login -->
+            <div id="adminLogin" class="login-box">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon info">🔒</div>
+                        <div class="card-title">Acceso Administrador</div>
+                    </div>
+                    <div class="form-group" style="margin-bottom:0.75rem;">
+                        <label for="adminPassword">Contraseña</label>
+                        <input type="password" id="adminPassword" placeholder="••••••••••" onkeydown="if(event.key==='Enter') login()">
+                    </div>
+                    <button class="btn" onclick="login()">Ingresar</button>
+                </div>
+            </div>
+
+            <!-- Panel -->
+            <div id="adminPanel" style="display:none;">
+
+                <div class="stats-row">
+                    <div class="stat-card ing">
+                        <div class="stat-label">Ingresos</div>
+                        <div class="stat-value ing" id="totalIngresos">$0</div>
+                    </div>
+                    <div class="stat-card egr" onclick="showEgresosDetail()" style="cursor:pointer;" title="Ver detalle de egresos">
+                        <div class="stat-label">Egresos ↗</div>
+                        <div class="stat-value egr" id="totalEgresos">$0</div>
+                    </div>
+                    <div class="stat-card bal">
+                        <div class="stat-label">Balance</div>
+                        <div class="stat-value bal" id="balance">$0</div>
+                    </div>
+                </div>
+
+                <!-- Filtros -->
+                <div class="filters-row">
+                    <select id="filterMonth" onchange="updateDashboard()">
+                        <option value="">Todos los meses</option>
+                    </select>
+                    <select id="filterYear" onchange="updateDashboard()">
+                        <option value="">Todos los años</option>
+                    </select>
+                    <select id="filterConcepto" onchange="updateDashboard()">
+                        <option value="">Todos los conceptos</option>
+                    </select>
+                </div>
+
+                <!-- Charts -->
+                <div class="charts-grid">
+                    <div class="chart-wrap">
+                        <div class="chart-title">Gastos por Concepto</div>
+                        <canvas id="gastosChart"></canvas>
+                    </div>
+                    <div class="chart-wrap">
+                        <div class="chart-title">Evolución Mensual</div>
+                        <canvas id="evolucionChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Todos los movimientos -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon info">📊</div>
+                        <div class="card-title">Todos los Movimientos</div>
+                    </div>
+                    <div id="todosMovimientos" class="tx-list"></div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Logout -->
+    <button class="logout-btn" id="logoutBtn" onclick="logout()">Cerrar Sesión</button>
+
+    <!-- Modal -->
+    <div id="detailModal" class="modal">
+        <div class="modal-box">
+            <button class="modal-close" onclick="closeModal()">×</button>
+            <h2 style="font-family:Syne,sans-serif; font-size:1rem; font-weight:700; margin-bottom:1rem;" id="detailTitle"></h2>
+            <div id="detailContent"></div>
+        </div>
+    </div>
+
+    <!-- Notif -->
+    <div id="notifEl"></div>
+
+    <script>
+        // ── PASSWORD (obfuscated) ──
+        const _p = atob('U3RheXJlYmVsMjAyNio=');
+
+        let gastosChart = null;
+        let evolucionChart = null;
+        let _cachedTxs = [];
+        let _unsubscribe = null;
+
+        // ── FIREBASE SAVE (cada tx se guarda individualmente) ──
+        async function saveTransaction(tx) {
+            if (!window.fbSave) throw new Error('Firebase no inicializado');
+            await window.fbSave(tx);
+        }
+
+        async function loadTransactions() {
+            if (!window.fbLoad) return _cachedTxs;
+            const txs = await window.fbLoad();
+            _cachedTxs = txs;
+            return txs;
+        }
+
+        // ── INIT ──
+        async function init() {
+            // Mostrar loading
+            document.getElementById('ultimosMovimientos').innerHTML =
+                '<div class="empty"><span>⏳</span>Conectando a base de datos...</div>';
+
+            // Esperar a que Firebase esté listo (puede tardar un momento)
+            let tries = 0;
+            while (!window.fbListen && tries < 30) {
+                await new Promise(r => setTimeout(r, 100));
+                tries++;
+            }
+
+            if (!window.fbListen) {
+                document.getElementById('ultimosMovimientos').innerHTML =
+                    '<div class="empty" style="color:var(--err)"><span>⚠️</span>Configura Firebase en el código para activar la base de datos online. Lee las instrucciones en la parte superior del script.</div>';
+                return;
+            }
+
+            // Escucha en tiempo real
+            _unsubscribe = window.fbListen((txs) => {
+                _cachedTxs = txs;
+                updateUltimosMovimientos(txs);
+                // Si el panel admin está abierto, actualizar también
+                if (document.getElementById('adminPanel').style.display !== 'none') {
+                    updateDashboard();
+                }
+            });
+        }
+
+        // Registrar init para que Firebase lo llame cuando esté listo
+        window._appInit = init;
+
+        // ── TAB SWITCH ──
+        function switchTab(tab, el) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+            el.classList.add('active');
+            document.getElementById(tab).classList.add('active');
+        }
+
+        // ── FORMAT DATE ──
+        function fmtDate(iso) {
+            return new Date(iso).toLocaleDateString('es-CO', {
+                day: '2-digit', month: '2-digit', year: 'numeric',
+                hour: '2-digit', minute: '2-digit'
+            });
+        }
+
+        // ── INGRESO FORM ──
+        document.getElementById('ingresoForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = e.target.querySelector('button[type=submit]');
+            btn.disabled = true; btn.textContent = 'Guardando...';
+
+            const nombre = document.getElementById('ingresoNombre').value.trim();
+            const monto = parseFloat(document.getElementById('ingresoMonto').value);
+            const concepto = document.getElementById('ingresoConcepto').value.trim();
+
+            try {
+                await saveTransaction({ tipo: 'ingreso', monto, concepto, registradoPor: nombre, fecha: new Date().toISOString() });
+                e.target.reset();
+                notify('Ingreso registrado ✓', 'success');
+            } catch(err) {
+                console.error(err);
+                notify('Error al guardar. Verifica la conexión.', 'error');
+            } finally {
+                btn.disabled = false; btn.textContent = '+ Registrar Ingreso';
+            }
+        });
+
+        // ── EGRESO FORM ──
+        document.getElementById('egresoForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = e.target.querySelector('button[type=submit]');
+            btn.disabled = true; btn.textContent = 'Guardando...';
+
+            const nombre = document.getElementById('egresoNombre').value.trim();
+            const monto = parseFloat(document.getElementById('egresoMonto').value);
+            const titulo = document.getElementById('egresoTitulo').value.trim();
+            const concepto = document.getElementById('egresoConcepto').value.trim();
+            const factura = document.getElementById('egresoFactura').checked;
+
+            try {
+                await saveTransaction({ tipo: 'egreso', monto, titulo, concepto, factura, registradoPor: nombre, fecha: new Date().toISOString() });
+                e.target.reset();
+                notify('Egreso registrado ✓', 'success');
+            } catch(err) {
+                console.error(err);
+                notify('Error al guardar. Verifica la conexión.', 'error');
+            } finally {
+                btn.disabled = false; btn.textContent = '− Registrar Egreso';
+            }
+        });
+
+        // ── RENDER TX ITEM ──
+        function renderTx(t, clickable = false) {
+            const fecha = fmtDate(t.fecha);
+            const por = t.registradoPor ? `<span class="tx-by">@${t.registradoPor}</span> · ` : '';
+
+            if (t.tipo === 'ingreso') {
+                return `
+                    <div class="tx-item ingreso">
+                        <div class="tx-info">
+                            <div class="tx-title">${t.concepto}</div>
+                            <div class="tx-meta">${por}${fecha}</div>
+                        </div>
+                        <div class="tx-amount ingreso">+$${t.monto.toFixed(2)}</div>
+                    </div>`;
+            } else {
+                return `
+                    <div class="tx-item egreso" ${clickable ? `onclick='showTxDetail(${JSON.stringify(t).replace(/'/g, "&apos;")})' style='cursor:pointer'` : ''}>
+                        <div class="tx-info">
+                            <div class="tx-title">${t.titulo}${t.factura ? '<span class="badge">Factura</span>' : ''}</div>
+                            <div class="tx-meta">${por}${fecha}</div>
+                        </div>
+                        <div class="tx-amount egreso">-$${t.monto.toFixed(2)}</div>
+                    </div>`;
+            }
+        }
+
+        // ── ÚLTIMOS MOVIMIENTOS ──
+        function updateUltimosMovimientos(txs) {
+            if (!txs) txs = _cachedTxs;
+            const el = document.getElementById('ultimosMovimientos');
+            if (txs.length === 0) {
+                el.innerHTML = '<div class="empty"><span>📊</span>No hay movimientos aún</div>';
+                return;
+            }
+            const last = [...txs].reverse().slice(0, 12);
+            el.innerHTML = last.map(t => renderTx(t)).join('');
+        }
+
+        // ── LOGIN ──
+        function login() {
+            const pw = document.getElementById('adminPassword').value;
+            if (pw === _p) {
+                document.getElementById('adminLogin').style.display = 'none';
+                document.getElementById('adminPanel').style.display = 'block';
+                document.getElementById('logoutBtn').classList.add('visible');
+                populateFilters();
+                updateDashboard();
+            } else {
+                notify('Contraseña incorrecta', 'error');
+                document.getElementById('adminPassword').value = '';
+            }
+        }
+
+        function logout() {
+            document.getElementById('adminLogin').style.display = 'block';
+            document.getElementById('adminPanel').style.display = 'none';
+            document.getElementById('logoutBtn').classList.remove('visible');
+            document.getElementById('adminPassword').value = '';
+        }
+
+        // ── DASHBOARD ──
+        async function updateDashboard() {
+            const txs = _cachedTxs.length ? _cachedTxs : await loadTransactions();
+            const fm = document.getElementById('filterMonth').value;
+            const fy = document.getElementById('filterYear').value;
+            const fc = document.getElementById('filterConcepto').value;
+
+            const filtered = txs.filter(t => {
+                const d = new Date(t.fecha);
+                if (fm && (d.getMonth() + 1) !== parseInt(fm)) return false;
+                if (fy && d.getFullYear() !== parseInt(fy)) return false;
+                if (fc && t.tipo === 'egreso' && t.titulo !== fc) return false;
+                return true;
+            });
+
+            const ing = filtered.filter(t => t.tipo === 'ingreso').reduce((s,t) => s + t.monto, 0);
+            const egr = filtered.filter(t => t.tipo === 'egreso').reduce((s,t) => s + t.monto, 0);
+            const bal = ing - egr;
+
+            document.getElementById('totalIngresos').textContent = `$${ing.toFixed(2)}`;
+            document.getElementById('totalEgresos').textContent = `$${egr.toFixed(2)}`;
+            document.getElementById('balance').textContent = `$${bal.toFixed(2)}`;
+            document.getElementById('balance').style.color = bal >= 0 ? 'var(--turquesa)' : 'var(--err)';
+
+            updateCharts(filtered);
+            updateTodosMovimientos(filtered);
+        }
+
+        // ── CHARTS ──
+        function updateCharts(txs) {
+            const egresos = txs.filter(t => t.tipo === 'egreso');
+            const conceptos = {};
+            egresos.forEach(e => { conceptos[e.titulo] = (conceptos[e.titulo] || 0) + e.monto; });
+
+            const ctx1 = document.getElementById('gastosChart');
+            if (gastosChart) gastosChart.destroy();
+            gastosChart = new Chart(ctx1, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(conceptos),
+                    datasets: [{ data: Object.values(conceptos), backgroundColor: ['#9B7EC8','#5EC4B6','#F5C842','#E05A6A','#7BA7D4','#C89B7E','#7EC89B'], borderWidth: 0 }]
+                },
+                options: { responsive: true, cutout: '65%', plugins: { legend: { position: 'bottom', labels: { color: '#7A7490', font: { family: 'DM Sans', size: 11 }, padding: 10, boxWidth: 10 } } } }
+            });
+
+            const monthly = {};
+            txs.forEach(t => {
+                const d = new Date(t.fecha);
+                const k = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+                if (!monthly[k]) monthly[k] = { i: 0, e: 0 };
+                t.tipo === 'ingreso' ? (monthly[k].i += t.monto) : (monthly[k].e += t.monto);
+            });
+            const keys = Object.keys(monthly).sort();
+
+            const ctx2 = document.getElementById('evolucionChart');
+            if (evolucionChart) evolucionChart.destroy();
+            evolucionChart = new Chart(ctx2, {
+                type: 'bar',
+                data: {
+                    labels: keys,
+                    datasets: [
+                        { label: 'Ingresos', data: keys.map(k => monthly[k].i), backgroundColor: 'rgba(94,196,182,0.7)', borderRadius: 4 },
+                        { label: 'Egresos', data: keys.map(k => monthly[k].e), backgroundColor: 'rgba(224,90,106,0.65)', borderRadius: 4 }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { labels: { color: '#7A7490', font: { family: 'DM Sans', size: 11 } } } },
+                    scales: {
+                        y: { ticks: { color: '#B0AABB' }, grid: { color: 'rgba(0,0,0,0.05)' } },
+                        x: { ticks: { color: '#B0AABB' }, grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        // ── TODOS LOS MOVIMIENTOS ──
+        function updateTodosMovimientos(txs) {
+            const el = document.getElementById('todosMovimientos');
+            if (txs.length === 0) {
+                el.innerHTML = '<div class="empty"><span>📊</span>Sin movimientos para mostrar</div>';
+                return;
+            }
+            el.innerHTML = [...txs].reverse().map(t => renderTx(t, true)).join('');
+        }
+
+        // ── POPULATE FILTERS ──
+        async function populateFilters() {
+            const txs = _cachedTxs.length ? _cachedTxs : await loadTransactions();
+            const meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+            const ms = document.getElementById('filterMonth');
+            ms.innerHTML = '<option value="">Todos los meses</option>';
+            meses.forEach((m,i) => ms.innerHTML += `<option value="${i+1}">${m}</option>`);
+
+            const ys = [...new Set(txs.map(t => new Date(t.fecha).getFullYear()))].sort().reverse();
+            const ysEl = document.getElementById('filterYear');
+            ysEl.innerHTML = '<option value="">Todos los años</option>';
+            ys.forEach(y => ysEl.innerHTML += `<option value="${y}">${y}</option>`);
+
+            const cs = [...new Set(txs.filter(t=>t.tipo==='egreso').map(t=>t.titulo))].sort();
+            const csEl = document.getElementById('filterConcepto');
+            csEl.innerHTML = '<option value="">Todos los conceptos</option>';
+            cs.forEach(c => csEl.innerHTML += `<option value="${c}">${c}</option>`);
+        }
+
+        // ── EGRESOS DETAIL ──
+        async function showEgresosDetail() {
+            const txs = _cachedTxs.length ? _cachedTxs : await loadTransactions();
+            const fm = document.getElementById('filterMonth').value;
+            const fy = document.getElementById('filterYear').value;
+
+            const egresos = txs.filter(t => {
+                if (t.tipo !== 'egreso') return false;
+                const d = new Date(t.fecha);
+                if (fm && (d.getMonth()+1) !== parseInt(fm)) return false;
+                if (fy && d.getFullYear() !== parseInt(fy)) return false;
+                return true;
+            });
+
+            const grouped = {};
+            egresos.forEach(e => { if (!grouped[e.titulo]) grouped[e.titulo] = []; grouped[e.titulo].push(e); });
+
+            let html = '';
+            for (const [titulo, items] of Object.entries(grouped)) {
+                const total = items.reduce((s,i) => s+i.monto, 0);
+                html += `
+                    <div style="display:flex;justify-content:space-between;align-items:center;padding:0.75rem;background:var(--bg3);border-radius:8px;margin-bottom:0.5rem;cursor:pointer;border:1px solid var(--line);" onclick='showConceptoDetail("${titulo.replace(/'/g,"&apos;")}")'>
+                        <div>
+                            <div style="font-family:Syne,sans-serif;font-size:0.85rem;font-weight:700;color:var(--t1);">${titulo}</div>
+                            <div style="font-size:0.7rem;color:var(--t2);margin-top:0.15rem;">${items.length} transacción(es)</div>
+                        </div>
+                        <div style="font-family:Syne,sans-serif;font-weight:800;color:var(--err);">$${total.toFixed(2)}</div>
+                    </div>`;
+            }
+
+            document.getElementById('detailTitle').textContent = 'Detalle de Egresos';
+            document.getElementById('detailContent').innerHTML = html || '<div class="empty"><span>📊</span>Sin egresos</div>';
+            document.getElementById('detailModal').classList.add('active');
+        }
+
+        async function showConceptoDetail(titulo) {
+            const txs = _cachedTxs.length ? _cachedTxs : await loadTransactions();
+            const items = txs.filter(t => t.tipo==='egreso' && t.titulo===titulo).reverse();
+            const html = items.map(e => `
+                <div class="tx-item egreso" style="margin-bottom:0.5rem;">
+                    <div class="tx-info">
+                        <div class="tx-title">${e.concepto}${e.factura?'<span class="badge">Factura</span>':''}</div>
+                        <div class="tx-meta">${e.registradoPor?`<span class="tx-by">@${e.registradoPor}</span> · `:''}${fmtDate(e.fecha)}</div>
+                    </div>
+                    <div class="tx-amount egreso">$${e.monto.toFixed(2)}</div>
+                </div>`).join('');
+
+            document.getElementById('detailTitle').textContent = titulo;
+            document.getElementById('detailContent').innerHTML = html || '<div class="empty"><span>📊</span>Sin movimientos</div>';
+            document.getElementById('detailModal').classList.add('active');
+        }
+
+        function showTxDetail(t) {
+            const html = `
+                <div style="display:flex;flex-direction:column;gap:0.6rem;">
+                    <div style="background:var(--bg3);padding:0.75rem;border-radius:8px;border:1px solid var(--line);">
+                        <div style="font-size:0.65rem;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--t2);margin-bottom:0.3rem;">Monto</div>
+                        <div style="font-family:Syne,sans-serif;font-size:1.8rem;font-weight:800;color:var(--err);">$${t.monto.toFixed(2)}</div>
+                    </div>
+                    ${t.registradoPor ? `<div style="background:var(--bg3);padding:0.75rem;border-radius:8px;border:1px solid var(--line);"><div style="font-size:0.65rem;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--t2);margin-bottom:0.3rem;">Registrado por</div><div style="color:var(--lila);font-weight:600;">@${t.registradoPor}</div></div>` : ''}
+                    <div style="background:var(--bg3);padding:0.75rem;border-radius:8px;border:1px solid var(--line);"><div style="font-size:0.65rem;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--t2);margin-bottom:0.3rem;">Concepto</div><div style="color:var(--t1);">${t.concepto}</div></div>
+                    <div style="background:var(--bg3);padding:0.75rem;border-radius:8px;border:1px solid var(--line);"><div style="font-size:0.65rem;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--t2);margin-bottom:0.3rem;">Fecha</div><div style="color:var(--t1);">${fmtDate(t.fecha)}</div></div>
+                    <div style="background:var(--bg3);padding:0.75rem;border-radius:8px;border:1px solid var(--line);"><div style="font-size:0.65rem;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--t2);margin-bottom:0.3rem;">Factura</div><div style="color:var(--t1);">${t.factura ? '✓ Generó factura' : '✗ Sin factura'}</div></div>
+                </div>`;
+            document.getElementById('detailTitle').textContent = t.titulo;
+            document.getElementById('detailContent').innerHTML = html;
+            document.getElementById('detailModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('detailModal').classList.remove('active');
+        }
+
+        // ── NOTIFY ──
+        function notify(msg, type) {
+            const el = document.getElementById('notifEl');
+            el.textContent = msg;
+            if (type === 'success') {
+                el.style.background = 'var(--turquesa)';
+                el.style.color = 'white';
+            } else {
+                el.style.background = 'var(--err)';
+                el.style.color = 'white';
+            }
+            el.style.display = 'block';
+            clearTimeout(el._timer);
+            el._timer = setTimeout(() => { el.style.display = 'none'; }, 3000);
+        }
+
+        // ── START (Firebase module calls _appInit when ready) ──
+        // If Firebase is already loaded (cached), start immediately
+        if (document.readyState !== 'loading' && window.fbListen) init();
+    </script>
+</body>
+</html>
